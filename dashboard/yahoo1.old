@@ -1,0 +1,54 @@
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import dash
+import pytz
+from dash import dcc, html
+from dash.dependencies import Input, Output
+from pytz import timezone
+
+import yfinance as yf  # Example using Yahoo Finance API
+
+def fetch_stock_data(ticker, start_date, end_date):
+    df = yf.download(ticker, start=start_date, end=end_date)
+    return df
+
+def convert_timezone(df, to_timezone):
+    df.index = df.index.tz_localize('America/Sao_Paulo').tz_convert(to_timezone)
+    return df
+
+df = fetch_stock_data('PETR3', '2023-01-01', '2024-01-01')
+df_cet = convert_timezone(df, 'America/Sao_Paulo')  # Convert to Central European Time
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div([
+    html.H1("Stock Dashboard"),
+    dcc.Dropdown(
+        id='stock-picker',
+        options=[{'label': 'PETR3', 'value': 'PETR3'},
+                 {'label': 'GOOGL', 'value': 'GOOGL'}],
+        value='AAPL'
+    ),
+    dcc.Graph(id='price-chart'),
+    dcc.Graph(id='volume-chart')
+])
+
+@app.callback(
+    [Output('price-chart', 'figure'),
+     Output('volume-chart', 'figure')],
+    [Input('stock-picker', 'value')]
+)
+def update_charts(selected_stock):
+    df = fetch_stock_data(selected_stock, '2023-01-01', '2024-01-01')
+
+    price_fig = px.line(df, x=df.index, y='Close', title='Price')
+    volume_fig = px.bar(df, x=df.index, y='Volume', title='Volume')
+
+    return price_fig, volume_fig
+
+# timezones = pytz.all_timezones
+# print(timezones)
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
