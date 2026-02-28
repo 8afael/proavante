@@ -382,12 +382,27 @@ async def get_historical_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# @app.post("/dcf")
+# async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
+#     try:
+#         result = DCFCalculator.calculate(
+#             db=db,
+#             symbol=request.symbol.upper(),
+#             growth_rate=request.growth_rate,
+#             projection_years=request.projection_years
+#         )
+#         return result
+
+
 @app.post("/dcf")
 async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
     try:
+        # Remova o .upper() ou use .lower() para bater com o que está no banco
+        symbol_to_query = request.symbol.lower() 
+        
         result = DCFCalculator.calculate(
             db=db,
-            symbol=request.symbol.upper(),
+            symbol=symbol_to_query,
             growth_rate=request.growth_rate,
             projection_years=request.projection_years
         )
@@ -395,19 +410,6 @@ async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# @app.post("/dcf")
-# async def calculate_dcf(request: DCFRequest):
-#     """Calcula o DCF para uma ação"""
-#     try:
-#         result = DCFCalculator.calculate(
-#             symbol=request.symbol,
-#             growth_rate=request.growth_rate,
-#             discount_rate=request.discount_rate,
-#             projection_years=request.projection_years
-#         )
-#         return result
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/capm")
 async def calculate_capm(symbol: str, market_return: float = 0.10, risk_free_rate: float = 0.05):
