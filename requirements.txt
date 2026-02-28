@@ -3,10 +3,9 @@ fastapi
 yfinance
 pandas
 numpy
-asyncio
-logging
 dotenv
 uvicorn
+gunicorn
 pydantic
 aiofiles
 httpx

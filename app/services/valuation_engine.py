@@ -1,7 +1,10 @@
+
 from sqlalchemy.orm import Session
 from app.models.stock_models import StockInfo, StockData
 from typing import Dict, Optional
+import yfinance as yf
 import logging
+
 
 logger = logging.getLogger(__name__)
 

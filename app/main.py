@@ -152,22 +152,29 @@ class DatabasePopulator:
             return False
     
     def populate_multiple_symbols(self, symbols: Optional[List[str]] = None, period: str = "6mo"):
-        """Popula múltiplos símbolos no banco de dados"""
+        """Popula múltiplos símbolos no banco de dados garantindo CAIXA ALTA"""
+        
+        # 1. Define a lista base
         if symbols is None:
             symbols = self.default_symbols
         
-        logger.info(f"Iniciando população de {len(symbols)} símbolos...")
+        # 2. Normaliza todos os símbolos para MAIÚSCULAS e remove espaços extras
+        symbols = [s.strip().upper() for s in symbols]
+        
+        logger.info(f"Iniciando população de {len(symbols)} símbolos: {symbols}")
         
         results = []
         for symbol in symbols:
+            # Agora 'symbol' já chega em caixa alta no método de gravação
             success = self.fetch_and_store_stock_data(symbol, period)
             results.append({"symbol": symbol, "success": success})
         
         # Resumo
         successful = sum(1 for r in results if r["success"])
-        logger.info(f"População concluída! {successful}/{len(symbols)} símbolos processados com sucesso.")
+        logger.info(f"População concluída! {successful}/{len(symbols)} símbolos processados.")
         return results
     
+
     def update_all_data(self, days_back: int = 7):
         """
         Atualiza todos os símbolos existentes com dados dos últimos dias
@@ -382,23 +389,12 @@ async def get_historical_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# @app.post("/dcf")
-# async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
-#     try:
-#         result = DCFCalculator.calculate(
-#             db=db,
-#             symbol=request.symbol.upper(),
-#             growth_rate=request.growth_rate,
-#             projection_years=request.projection_years
-#         )
-#         return result
-
 
 @app.post("/dcf")
 async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
     try:
         # Remova o .upper() ou use .lower() para bater com o que está no banco
-        symbol_to_query = request.symbol.lower() 
+        symbol_to_query = request.symbol.upper() 
         
         result = DCFCalculator.calculate(
             db=db,
@@ -412,17 +408,23 @@ async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/capm")
-async def calculate_capm(symbol: str, market_return: float = 0.10, risk_free_rate: float = 0.05):
+async def calculate_capm(request: DCFRequest): # Use apenas o request se o symbol estiver no JSON
     """Calcula o retorno esperado pelo CAPM"""
     try:
+        symbol_to_query = request.symbol.upper()
+        # Se o seu DCFRequest não tiver market_return e risk_free, 
+        # você pode usar valores padrão aqui
         result = CAPMCalculator.calculate(
-            symbol=symbol,
-            market_return=market_return,
-            risk_free_rate=risk_free_rate
+            symbol=symbol_to_query,
+            market_return=0.12, # Exemplo de prêmio de mercado
+            risk_free_rate=0.1075 # Exemplo Selic
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Troquei 'detail=str(e)' para algo mais amigável caso queira
+        raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
+    
+
 
 # Endpoints administrativos
 @app.post("/admin/populate")
