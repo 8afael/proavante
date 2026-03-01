@@ -4,8 +4,10 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Optional
+from fastapi.staticfiles import StaticFiles
+from app.web.router import router as web_router
 import asyncio
-import logging
+import logging, json
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -65,9 +67,7 @@ class DatabasePopulator:
     def __init__(self, db: Session):
         self.db = db
         self.default_symbols = [
-            "PETR4.SA", "VALE3.SA", "ITUB4.SA", "BBDC4.SA", "MGLU3.SA",
-            "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
-            "^BVSP", "^GSPC", "^IXIC"  # Índices
+            "PETR4.SA" # Índices
         ]
     
     def fetch_and_store_stock_data(self, symbol: str, period: str = "6mo") -> bool:
@@ -217,10 +217,14 @@ class DatabasePopulator:
 
 # Criar aplicação FastAPI
 app = FastAPI(
-    title="Financial Data API",
+    title="Valuation Data API",
     description="API para dados financeiros e valuation de ações",
     version="1.0.0"
 )
+
+#Configurar Static
+app.include_router(web_router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configurar CORS
 app.add_middleware(
@@ -389,23 +393,34 @@ async def get_historical_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 @app.post("/dcf")
 async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
     try:
-        # Remova o .upper() ou use .lower() para bater com o que está no banco
         symbol_to_query = request.symbol.upper() 
         
+        # 1. Calcula o DCF
         result = DCFCalculator.calculate(
             db=db,
             symbol=symbol_to_query,
             growth_rate=request.growth_rate,
             projection_years=request.projection_years
         )
+        
+        # 2. Salva o resultado na sua tabela de cache (ValuationResult)
+        new_valuation = ValuationResult(
+            symbol=symbol_to_query,
+            valuation_type='DCF',
+            parameters=json.dumps({"growth_rate": request.growth_rate}),
+            result=json.dumps(result)
+        )
+        db.add(new_valuation)
+        db.commit()
+        
         return result
     except Exception as e:
+        db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
+    
 
 @app.post("/capm")
 async def calculate_capm(request: DCFRequest): # Use apenas o request se o symbol estiver no JSON
@@ -425,32 +440,31 @@ async def calculate_capm(request: DCFRequest): # Use apenas o request se o symbo
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
     
 
-
 # Endpoints administrativos
-@app.post("/admin/populate")
-async def populate_database(
-    symbols: Optional[str] = Query(None, description="Símbolos separados por vírgula"),
-    period: str = Query("6mo", description="Período para buscar dados"),
-    db: Session = Depends(get_db)
-):
-    """Popula o banco de dados com dados do Yahoo Finance"""
-    try:
-        populator = DatabasePopulator(db)
+# @app.post("/admin/populate")
+# async def populate_database(
+#     symbols: Optional[str] = Query(None, description="Símbolos separados por vírgula"),
+#     period: str = Query("6mo", description="Período para buscar dados"),
+#     db: Session = Depends(get_db)
+# ):
+#     """Popula o banco de dados com dados do Yahoo Finance"""
+#     try:
+#         populator = DatabasePopulator(db)
         
-        symbol_list = None
-        if symbols:
-            symbol_list = [s.strip() for s in symbols.split(",")]
+#         symbol_list = None
+#         if symbols:
+#             symbol_list = [s.strip() for s in symbols.split(",")]
         
-        results = populator.populate_multiple_symbols(symbol_list, period)
+#         results = populator.populate_multiple_symbols(symbol_list, period)
         
-        return {
-            "message": "População concluída",
-            "results": results,
-            "timestamp": datetime.now().isoformat()
-        }
+#         return {
+#             "message": "População concluída",
+#             "results": results,
+#             "timestamp": datetime.now().isoformat()
+#         }
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/admin/update")
 async def update_database(
@@ -492,6 +506,33 @@ async def database_status(db: Session = Depends(get_db)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/admin/populate")
+async def populate_asset(symbol: str = None, months: int = 6, db: Session = Depends(get_db)):
+    service = DatabasePopulator(db)
+    
+    # Transformamos o 'symbol' único em uma LISTA para o método aceitar
+    # Se o usuário não enviou nada, passamos None para ele usar a lista padrão
+    target_symbols = [symbol.upper()] if symbol else None
+    
+    # Convertemos meses para o formato que o yfinance espera (ex: 6 -> "6mo")
+    period_str = f"{months}mo"
+    
+    # Chama o seu método
+    results = service.populate_multiple_symbols(symbols=target_symbols, period=period_str)
+    
+    return {"status": "success", "results": results}
+
+# @app.post("/admin/populate")
+# async def populate_asset(symbol: str, months: int = 6, db: Session = Depends(get_db)):
+#     try:
+#         # Aqui você chama a lógica do seu serviço de populate existente
+#         # Exemplo: result = AssetService.populate_db(db, symbol, months)
+#         # Por enquanto, vou simular o sucesso:
+#         return {"status": "success", "message": f"Dados de {symbol} importados."}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))   
 
 # Script para executar diretamente
 if __name__ == "__main__":
@@ -524,7 +565,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
-        port=8000,
+        port=8080,
         reload=True,  # Apenas para desenvolvimento
         log_level="info"
     )

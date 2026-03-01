@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Proa Avante</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+    <nav class="bg-gray-800 border-b border-gray-700 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/dashboard" class="text-green-400 font-bold">← Voltar ao Dashboard</a>
+            <h1 class="text-xl font-bold">Gerenciar Ativos</h1>
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-10 p-4 max-w-2xl">
+        <div class="bg-gray-800 border border-gray-700 p-8 rounded-2xl shadow-2xl">
+            <h2 class="text-2xl font-bold mb-6 text-green-400">Importar Novo Ativo</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Símbolo da Ação (Ticker)</label>
+                    <input type="text" id="symbol" placeholder="Ex: PETR4.SA" 
+                           class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-green-500 outline-none uppercase">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Período de Histórico (Meses)</label>
+                    <select id="months" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-green-500 outline-none">
+                        <option value="1">1 mês</option>
+                        <option value="3">3 meses</option>
+                        <option value="6" selected>6 meses</option>
+                        <option value="12">12 meses</option>
+                        <option value="24">24 meses (2 anos)</option>
+                    </select>
+                </div>
+
+                <button onclick="runPopulate()" id="btnPopulate" 
+                        class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg transition-all duration-300 shadow-lg flex justify-center items-center">
+                    <span id="btnText">Executar Importação</span>
+                </button>
+            </div>
+
+            <div id="statusMessage" class="mt-6 p-4 rounded-lg hidden text-sm"></div>
+        </div>
+    </main>
+
+    <script>
+    async function runPopulate() {
+        const symbol = document.getElementById('symbol').value.trim();
+        const months = document.getElementById('months').value;
+        const btn = document.getElementById('btnPopulate');
+        const btnText = document.getElementById('btnText');
+        const statusMsg = document.getElementById('statusMessage');
+
+        if (!symbol) return alert("Por favor, insira um símbolo.");
+
+        // UI Loading
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        btnText.innerHTML = `<svg class="animate-spin h-5 w-5 mr-3 border-t-2 border-white rounded-full" viewBox="0 0 24 24"></svg> Importando...`;
+
+        try {
+            const response = await fetch(`/admin/populate?symbol=${symbol.toUpperCase()}&months=${months}`, {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+
+            statusMsg.classList.remove('hidden', 'bg-red-900/50', 'text-red-200', 'bg-green-900/50', 'text-green-200');
+            
+            if (response.ok) {
+                statusMsg.classList.add('bg-green-900/50', 'text-green-200');
+                statusMsg.innerText = `Sucesso! Ativo ${symbol} importado com sucesso.`;
+                document.getElementById('symbol').value = '';
+            } else {
+                throw new Error(data.detail || "Erro desconhecido");
+            }
+        } catch (error) {
+            statusMsg.classList.add('bg-red-900/50', 'text-red-200');
+            statusMsg.innerText = "Erro: " + error.message;
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnText.innerText = "Executar Importação";
+        }
+    }
+    </script>
+</body>
+</html>

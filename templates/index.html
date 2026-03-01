@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial AI - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(234, 179, 8, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
+        }
+        .calculating {
+            animation: pulse-gold 1.5s infinite;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+    <nav class="bg-gray-800 border-b border-gray-700 p-4 shadow-xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center font-bold text-gray-900">PA</div>
+                <h1 class="text-xl font-bold tracking-tight">Proa<span class="text-green-400">Avante</span></h1>
+            </div>
+            <div class="space-x-6 text-sm font-medium">
+                <a href="/dashboard" class="text-green-400 border-b-2 border-green-400 pb-1">Dashboard</a>
+                <a href="/admin/manage" class="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-lg text-white transition">Gerenciar Ativos</a>
+                <a href="/docs" class="text-gray-400 hover:text-white transition italic">API Docs</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-10 p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-1 bg-gray-800 border border-gray-700 p-6 rounded-2xl shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold">Portfólio Local</h2>
+                    <span class="bg-gray-700 text-xs px-2 py-1 rounded text-gray-400">{{ stocks|length }} ativos</span>
+                </div>
+                <ul class="divide-y divide-gray-700">
+                    {% for stock in stocks %}
+                    <li class="py-4 flex justify-between items-center border-b border-gray-700/40 last:border-0" id="row-{{ stock.symbol }}">
+                        <div class="flex flex-col">
+                            <span class="text-green-400 font-mono font-bold text-lg">{{ stock.symbol }}</span>
+                            <span class="text-[10px] text-gray-500 uppercase">{{ stock.longName or 'N/A' }}</span>
+                        </div>
+                        
+                        <div class="flex items-center space-x-6">
+                            <div class="text-right min-w-[120px]" id="valuation-container-{{ stock.symbol }}">
+                                {% if stock.intrinsic_value %}
+                                    <div class="text-[10px] text-gray-500 uppercase font-semibold">Valor Justo</div>
+                                    
+                                    <div class="flex items-center justify-end space-x-2">
+                                        <button onclick="calculateDCF('{{ stock.symbol }}')" 
+                                                id="btn-{{ stock.symbol }}"
+                                                title="Recalcular Valuation"
+                                                class="text-gray-500 hover:text-yellow-500 transition-colors duration-200">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                        </button>
+                                        <span class="text-sm font-bold text-yellow-500">R$ {{ "%.2f"|format(stock.intrinsic_value) }}</span>
+                                    </div>
+
+                                    <div class="text-[10px] {{ 'text-green-400' if stock.upside > 0 else 'text-red-400' }} font-bold">
+                                        {{ '▲' if stock.upside > 0 else '▼' }} {{ "%.1f"|format(stock.upside) }}% Upside
+                                    </div>
+                                {% else %}
+                                    <button onclick="calculateDCF('{{ stock.symbol }}')" 
+                                            id="btn-{{ stock.symbol }}"
+                                            class="text-[10px] bg-yellow-600/10 hover:bg-yellow-500 hover:text-gray-900 text-yellow-500 border border-yellow-500/30 px-3 py-1.5 rounded-lg transition-all duration-300 font-bold uppercase tracking-wider">
+                                        Calcular DCF
+                                    </button>
+                                {% endif %}
+                            </div>                            
+                            <!-- <div class="text-right min-w-[120px]" id="valuation-container-{{ stock.symbol }}">
+                                {% if stock.intrinsic_value %}
+                                    <div class="text-[10px] text-gray-500 uppercase font-semibold">Valor Justo</div>
+                                    <div class="text-sm font-bold text-yellow-500">R$ {{ "%.2f"|format(stock.intrinsic_value) }}</div>
+                                    <div class="text-[10px] {{ 'text-green-400' if stock.upside > 0 else 'text-red-400' }} font-bold">
+                                        {{ '▲' if stock.upside > 0 else '▼' }} {{ "%.1f"|format(stock.upside) }}% Upside
+                                    </div>
+                                {% else %}
+                                    <button onclick="calculateDCF('{{ stock.symbol }}')" 
+                                            id="btn-{{ stock.symbol }}"
+                                            class="text-[10px] bg-yellow-600/10 hover:bg-yellow-500 hover:text-gray-900 text-yellow-500 border border-yellow-500/30 px-3 py-1.5 rounded-lg transition-all duration-300 font-bold uppercase tracking-wider">
+                                        Calcular DCF
+                                    </button>
+                                {% endif %}
+                            </div> -->
+
+                            <a href="/dashboard/{{ stock.symbol }}" class="bg-gray-800 hover:bg-green-600 border border-gray-700 p-2 rounded-xl transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                </svg>
+                            </a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-gradient-to-br from-green-600 to-blue-700 p-8 rounded-2xl shadow-lg relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h2 class="text-3xl font-extrabold mb-2">Bem-vindo ao Valuation Engine</h2>
+                        <p class="text-green-100 max-w-md">Selecione uma ação ao lado para visualizar o histórico de preços e calcular o valor justo via DCF.</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 border border-gray-700 p-6 rounded-2xl">
+                    <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">Dica de Uso</h3>
+                    <p class="text-gray-300">Use o menu Gerenciar Ativos para adicionar novos tickers.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-20 py-10 border-t border-gray-800 text-center text-gray-500 text-sm">
+        <p>Sistema de Análise Fundamentalista &copy; 2026 | Desenvolvido por Proa Avante</p>
+    </footer>
+
+    <script>
+    async function calculateDCF(symbol) {
+        const container = document.getElementById(`valuation-container-${symbol}`);
+        const btn = document.getElementById(`btn-${symbol}`);
+        
+        btn.classList.add('calculating');
+        if (btn.querySelector('svg')) {
+            btn.querySelector('svg').classList.add('animate-spin');
+        }
+        btn.innerText = "Processando...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/dcf', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    symbol: symbol, 
+                    growth_rate: 0.05, 
+                    projection_years: 5 
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                const currentPrice = result.current_price;
+                const intrinsicValue = result.intrinsic_value;
+                const upside = ((intrinsicValue / currentPrice) - 1) * 100;
+                
+                const colorClass = upside > 0 ? 'text-green-400' : 'text-red-400';
+                const icon = upside > 0 ? '▲' : '▼';
+
+                container.innerHTML = `
+                    <div class="text-[10px] text-gray-500 uppercase font-semibold">Valor Justo</div>
+                    <div class="text-sm font-bold text-yellow-500">R$ ${intrinsicValue.toFixed(2)}</div>
+                    <div class="text-[10px] ${colorClass} font-bold animate-bounce">
+                        ${icon} ${upside.toFixed(1)}% Upside
+                    </div>
+                `;
+            } else {
+                throw new Error(result.detail || "Erro no servidor");
+            }
+        } catch (error) {
+            btn.classList.remove('calculating');
+            btn.innerText = "Erro! Re-tentar";
+            btn.disabled = false;
+            console.error("Erro no Valuation:", error);
+        }
+    }
+    </script>
+</body>
+</html>

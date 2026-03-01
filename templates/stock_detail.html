@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ symbol }} - Detalhes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans">
+    <nav class="bg-gray-800 border-b border-gray-700 p-4 shadow-xl">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <a href="/dashboard" class="text-green-400 hover:text-green-300 font-bold">← Voltar</a>
+                <h1 class="text-xl font-bold tracking-tight">Análise: <span class="text-green-400">{{ symbol }}</span></h1>
+            </div>
+            <div class="text-sm text-gray-400">Dados via Yahoo Finance</div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto mt-10 p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
+                <h3 class="text-gray-400 text-xs uppercase font-bold mb-2">Último Fechamento</h3>
+                <p class="text-3xl font-mono font-bold text-white">R$ {{ "%.2f"|format(chart_data.prices[-1]) }}</p>
+            </div>
+            
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow-lg">
+                <h3 class="text-gray-400 text-xs uppercase font-bold mb-2">Variação no Período</h3>
+                {% set start_p = chart_data.prices[0] %}
+                {% set end_p = chart_data.prices[-1] %}
+                {% set var = ((end_p / start_p) - 1) * 100 %}
+                <p class="text-3xl font-mono font-bold {{ 'text-green-400' if var >= 0 else 'text-red-400' }}">
+                    {{ "%.2f"|format(var) }}%
+                </p>
+            </div>
+
+            <div class="lg:col-span-4 bg-gray-800 p-8 rounded-2xl border border-gray-700 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">Histórico de Preços</h2>
+                    <span class="text-xs bg-gray-700 px-3 py-1 rounded-full text-gray-300">Últimos 6 meses</span>
+                </div>
+                <div class="h-[400px]">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        
+        // Cores dinâmicas baseadas na variação
+        const isPositive = {{ chart_data.prices[-1] }} >= {{ chart_data.prices[0] }};
+        const mainColor = isPositive ? '#4ade80' : '#f87171';
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, mainColor + '44'); // Transparência
+        gradient.addColorStop(1, mainColor + '00');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_data.labels | safe }},
+                datasets: [{
+                    label: 'Preço de Fechamento (BRL)',
+                    data: {{ chart_data.prices | safe }},
+                    borderColor: mainColor,
+                    borderWidth: 3,
+                    fill: true,
+                    backgroundColor: gradient,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 45 }
+                    },
+                    y: {
+                        grid: { color: '#374151' },
+                        ticks: { color: '#9ca3af' }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
