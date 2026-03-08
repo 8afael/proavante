@@ -1,4 +1,5 @@
 # backend/app/web/router.py
+from http.client import HTTPException
 import os
 
 from fastapi import APIRouter, FastAPI, Request, Depends
@@ -21,6 +22,8 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/{symbol}", response_class=HTMLResponse)
 async def stock_page(request: Request, symbol: str, db: Session = Depends(get_db)):
+    if symbol.lower() == "health":
+        raise HTTPException(status_code=404)
     chart_data = WebDashboardService.prepare_chart_data(db, symbol)
     return templates.TemplateResponse("stock_detail.html", {
         "request": request, 
