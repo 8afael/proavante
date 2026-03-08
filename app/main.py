@@ -266,9 +266,6 @@ def startup_event():
 #         ]
 #     }
 
-app.include_router(web_router)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
     """Verifica se a API e o banco estão funcionando"""
@@ -527,17 +524,10 @@ async def populate_asset(symbol: str = None, months: int = 6, db: Session = Depe
     
     return {"status": "success", "results": results}
 
-# @app.post("/admin/populate")
-# async def populate_asset(symbol: str, months: int = 6, db: Session = Depends(get_db)):
-#     try:
-#         # Aqui você chama a lógica do seu serviço de populate existente
-#         # Exemplo: result = AssetService.populate_db(db, symbol, months)
-#         # Por enquanto, vou simular o sucesso:
-#         return {"status": "success", "message": f"Dados de {symbol} importados."}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))   
 
-# Script para executar diretamente
+app.include_router(web_router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 if __name__ == "__main__":
     import uvicorn
     
