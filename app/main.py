@@ -525,8 +525,9 @@ async def populate_asset(symbol: str = None, months: int = 6, db: Session = Depe
     return {"status": "success", "results": results}
 
 
-app.include_router(web_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(web_router)
+
 
 if __name__ == "__main__":
     import uvicorn
