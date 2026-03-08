@@ -14,12 +14,12 @@ base_dir = os.path.dirname(os.path.dirname(current_dir))
 template_path = os.path.join(base_dir, "templates")
 templates = Jinja2Templates(directory=template_path)
 
-@router.get("/dashboard", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, db: Session = Depends(get_db)):
     stocks = WebDashboardService.get_summary_cards(db)
     return templates.TemplateResponse("index.html", {"request": request, "stocks": stocks})
 
-@router.get("/dashboard/{symbol}", response_class=HTMLResponse)
+@router.get("/{symbol}", response_class=HTMLResponse)
 async def stock_page(request: Request, symbol: str, db: Session = Depends(get_db)):
     chart_data = WebDashboardService.prepare_chart_data(db, symbol)
     return templates.TemplateResponse("stock_detail.html", {

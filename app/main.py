@@ -248,23 +248,26 @@ def get_db():
 def startup_event():
     init_database()
 
-@app.get("/")
-async def root():
-    return {
-        "message": "Financial Data API",
-        "version": "1.0.0",
-        "endpoints": [
-            "/docs - Documentação",
-            "/health - Health check",
-            "/stocks/{symbol} - Dados de uma ação",
-            "/stocks/{symbol}/historical - Dados históricos",
-            "/stocks/{symbol}/info - Informações da empresa",
-            "/dcf - Calcular DCF",
-            "/capm - Calcular CAPM",
-            "/admin/populate - Popular banco de dados",
-            "/admin/update - Atualizar dados"
-        ]
-    }
+# @app.get("/")
+# async def root():
+#     return {
+#         "message": "Financial Data API",
+#         "version": "1.0.0",
+#         "endpoints": [
+#             "/docs - Documentação",
+#             "/health - Health check",
+#             "/stocks/{symbol} - Dados de uma ação",
+#             "/stocks/{symbol}/historical - Dados históricos",
+#             "/stocks/{symbol}/info - Informações da empresa",
+#             "/dcf - Calcular DCF",
+#             "/capm - Calcular CAPM",
+#             "/admin/populate - Popular banco de dados",
+#             "/admin/update - Atualizar dados"
+#         ]
+#     }
+
+app.include_router(web_router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
