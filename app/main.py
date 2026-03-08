@@ -222,9 +222,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-#Configurar Static
-app.include_router(web_router)
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configurar CORS
 app.add_middleware(
@@ -248,23 +245,6 @@ def get_db():
 def startup_event():
     init_database()
 
-# @app.get("/")
-# async def root():
-#     return {
-#         "message": "Financial Data API",
-#         "version": "1.0.0",
-#         "endpoints": [
-#             "/docs - Documentação",
-#             "/health - Health check",
-#             "/stocks/{symbol} - Dados de uma ação",
-#             "/stocks/{symbol}/historical - Dados históricos",
-#             "/stocks/{symbol}/info - Informações da empresa",
-#             "/dcf - Calcular DCF",
-#             "/capm - Calcular CAPM",
-#             "/admin/populate - Popular banco de dados",
-#             "/admin/update - Atualizar dados"
-#         ]
-#     }
 
 @app.get("/health")
 async def health_check(db: Session = Depends(get_db)):
@@ -439,32 +419,6 @@ async def calculate_capm(request: DCFRequest): # Use apenas o request se o symbo
         # Troquei 'detail=str(e)' para algo mais amigável caso queira
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
     
-
-# Endpoints administrativos
-# @app.post("/admin/populate")
-# async def populate_database(
-#     symbols: Optional[str] = Query(None, description="Símbolos separados por vírgula"),
-#     period: str = Query("6mo", description="Período para buscar dados"),
-#     db: Session = Depends(get_db)
-# ):
-#     """Popula o banco de dados com dados do Yahoo Finance"""
-#     try:
-#         populator = DatabasePopulator(db)
-        
-#         symbol_list = None
-#         if symbols:
-#             symbol_list = [s.strip() for s in symbols.split(",")]
-        
-#         results = populator.populate_multiple_symbols(symbol_list, period)
-        
-#         return {
-#             "message": "População concluída",
-#             "results": results,
-#             "timestamp": datetime.now().isoformat()
-#         }
-        
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/admin/update")
 async def update_database(
