@@ -11,13 +11,13 @@ echo -e "${GREEN}===> Iniciando Deploy...${NC}"
 echo -e "${GREEN}===> Atualizando código com Git Pull...${NC}"
 cd /opt/docker/acoes/
 
-git pull acoes main
+git pull proavante main
 
 # 2. Reconstrói e sobe os containers
 # O flag --build garante que o Docker refaça a imagem se o código mudou
 echo -e "${GREEN}===> Reconstruindo containers com Docker Compose...${NC}"
 docker-compose down
-docker-compose -f docker-compose.yml -d --build
+docker-compose up -d --build acoes-app
 
 # 3. Limpeza de imagens antigas
 # Remove imagens que ficaram sem nome (dangling) para não encher o disco
