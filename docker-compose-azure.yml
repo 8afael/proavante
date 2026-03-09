@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:18
+    container_name: postgres
+    restart: always
+    ports:
+      - "0.0.0.0:5432:5432"
+    environment:
+      POSTGRES_USER: acoesadm
+      POSTGRES_PASSWORD: 3mh0X875
+      POSTGRES_DB: financial_db
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acoesadm -d financial_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rede-infra-geral
+
+  acoes-app:
+    build: .
+    container_name: acoes-app
+    restart: always
+    ports:
+      - "8080:8080"
+#      - "443:443"
+#    volumes:
+#      - /etc/letsencrypt:/etc/letsencrypt:ro 
+    environment:
+      # Host 'db' refere-se ao serviço acima
+      #SQLALCHEMY_DATABASE_URL: postgresql://acoesadm:3mh0X875@db:5432/financial_db
+      DATABASE_URL: postgresql://acoesadm:3mh0X875@db:5432/financial_db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - rede-infra-geral
+
+networks:
+  rede-infra-geral:
+    external: true
+
+volumes:
+  postgres_data:
