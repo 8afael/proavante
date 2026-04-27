@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from pathlib import Path
-
+from jinja2 import FileSystemBytecodeCache
 from app.services.database import get_db
 from app.web.service import WebDashboardService
 
@@ -13,6 +13,7 @@ router = APIRouter(include_in_schema=False)
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.bytecode_cache = None
 
 
 @router.get("/", response_class=HTMLResponse)
