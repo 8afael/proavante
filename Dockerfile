@@ -4,6 +4,8 @@ FROM python:3.11-slim
 # Definir variáveis de ambiente para evitar arquivos .pyc e buffer de log
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV JINJA2_CACHE_SIZE=0
+ENV JINJA_CACHE_SIZE=0
 
 # Definir diretório de trabalho
 WORKDIR /acoes/app
@@ -28,4 +30,5 @@ EXPOSE 8080
 
 # Comando para iniciar a aplicação usando Gunicorn com workers Uvicorn
 # Ajustado para escutar em 0.0.0.0 e na porta 8080
-CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]
+# CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]
+CMD ["gunicorn", "app.main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--preload", "--bind", "0.0.0.0:8080"]
