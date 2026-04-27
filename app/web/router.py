@@ -6,16 +6,25 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from pathlib import Path
 from jinja2 import FileSystemBytecodeCache
+from jinja2 import Environment
 from app.services.database import get_db
 from app.web.service import WebDashboardService
 
 router = APIRouter(include_in_schema=False)
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-templates.env.cache = {}
-templates.env.bytecode_cache = None
+templates = Jinja2Templates(directory=str(BASE_DIR / "/acoes/app/app/templates"))
+#templates.env.cache = {}
+#templates.env.bytecode_cache = None
+templates.env = Environment(
+    loader=templates.env.loader,
+    auto_reload=True,
+    cache_size=0
+)
 
+print("TEMPLATES TYPE:", type(templates))
+print("TEMPLATES VALUE:", templates)
+print("TEMPLATE NAME TYPE:", type("index.html"))
 
 @router.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request, db: Session = Depends(get_db)):
