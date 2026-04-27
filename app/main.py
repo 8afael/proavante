@@ -479,9 +479,12 @@ async def populate_asset(symbol: str = None, months: int = 6, db: Session = Depe
     return {"status": "success", "results": results}
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR.parent / "static"
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 #app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(web_router)
