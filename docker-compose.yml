@@ -27,7 +27,7 @@ services:
       - "8080:8080"
     environment:
       # Host 'db' refere-se ao serviço acima
-      SQLALCHEMY_DATABASE_URL: postgresql://acoesadm:3mh0X875@db:5432/financial_db
+      DATABASE_URL: postgresql://acoesadm:3mh0X875@db:5432/financial_db
     depends_on:
       db:
         condition: service_healthy
