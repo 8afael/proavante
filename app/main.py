@@ -492,7 +492,8 @@ else:
 #app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 #app.mount("/static", StaticFiles(directory="static"), name="static")
-app.include_router(web_router)
+#app.include_router(web_router)
+app.include_router(web_router, prefix="/acoes")
 
 
 if __name__ == "__main__":
