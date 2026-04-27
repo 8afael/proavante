@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:18
     container_name: postgres
-    restart: always
+    restart: no
     ports:
       - "0.0.0.0:5432:5432"
     environment:
@@ -22,7 +22,7 @@ services:
   acoes-app:
     build: .
     container_name: acoes-app
-    restart: always
+    restart: no
     ports:
       - "8080:8080"
     environment:
