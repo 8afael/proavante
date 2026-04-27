@@ -482,9 +482,14 @@ async def populate_asset(symbol: str = None, months: int = 6, db: Session = Depe
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = BASE_DIR.parent / "static"
+STATIC_DIR = BASE_DIR / "static"
 
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+else:
+    print(f"[WARN] static não existe: {STATIC_DIR}")
+
+#app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 #app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(web_router)
