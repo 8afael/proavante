@@ -482,7 +482,7 @@ async def populate_asset(symbol: str = None, months: int = 6, db: Session = Depe
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
-STATIC_DIR = "/proavante/static"
+STATIC_DIR = BASE_DIR.parent / "static"
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
