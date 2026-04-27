@@ -13,6 +13,7 @@ router = APIRouter(include_in_schema=False)
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.cache = {}
 templates.env.bytecode_cache = None
 
 
