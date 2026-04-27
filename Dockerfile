@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # Definir diretório de trabalho
-WORKDIR /proavante
+WORKDIR /proavante/app
 
 # Instalar dependências do sistema necessárias para o psycopg2 (Postgres)
 RUN apt-get update && apt-get install -y \
