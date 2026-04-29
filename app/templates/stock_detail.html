@@ -55,16 +55,18 @@
         const isPositive = {{ chart_data.prices[-1] }} >= {{ chart_data.prices[0] }};
         const mainColor = isPositive ? '#4ade80' : '#f87171';
         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, mainColor + '44'); // Transparência
+        gradient.addColorStop(0, mainColor + '44');
         gradient.addColorStop(1, mainColor + '00');
 
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: {{ chart_data.labels | safe }},
+                // CORREÇÃO AQUI: adicionado | tojson
+                labels: {{ chart_data.labels | tojson | safe }},
                 datasets: [{
                     label: 'Preço de Fechamento (BRL)',
-                    data: {{ chart_data.prices | safe }},
+                    // CORREÇÃO AQUI: adicionado | tojson
+                    data: {{ chart_data.prices | tojson | safe }},
                     borderColor: mainColor,
                     borderWidth: 3,
                     fill: true,
@@ -93,5 +95,7 @@
             }
         });
     </script>
+
+    
 </body>
 </html>

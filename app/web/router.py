@@ -13,7 +13,8 @@ from app.web.service import WebDashboardService
 router = APIRouter(include_in_schema=False)
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-templates = Jinja2Templates(directory=str(BASE_DIR / "/acoes/app/app/templates"))
+templates = Jinja2Templates(directory=str(BASE_DIR / "app/templates"))
+#templates = Jinja2Templates(directory=str(BASE_DIR / "/acoes/app/app/templates"))
 #templates.env.cache = {}
 #templates.env.bytecode_cache = None
 templates.env = Environment(
