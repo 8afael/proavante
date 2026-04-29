@@ -247,7 +247,7 @@ def startup_event():
     init_database()
 
 
-@app.get("/health")
+@app.get("/api/health")
 async def health_check(db: Session = Depends(get_db)):
     """Verifica se a API e o banco estão funcionando"""
     try:
@@ -263,7 +263,7 @@ async def health_check(db: Session = Depends(get_db)):
         "timestamp": datetime.now().isoformat()
     }
 
-@app.get("/stocks/{symbol}")
+@app.get("/api/stocks/{symbol}")
 async def get_stock_quote(symbol: str, db: Session = Depends(get_db)):
     """Retorna a cotação mais recente de uma ação"""
     try:
@@ -306,7 +306,7 @@ async def get_stock_quote(symbol: str, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/stocks/{symbol}/historical")
+@app.get("/api/stocks/{symbol}/historical")
 async def get_historical_data(
     symbol: str, 
     period: str = Query("6mo", description="Período: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y"),
@@ -374,7 +374,7 @@ async def get_historical_data(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/dcf")
+@app.post("/api/dcf")
 async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
     try:
         symbol_to_query = request.symbol.upper() 
@@ -403,7 +403,7 @@ async def calculate_dcf(request: DCFRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@app.post("/capm")
+@app.post("/api/capm")
 async def calculate_capm(request: DCFRequest): # Use apenas o request se o symbol estiver no JSON
     """Calcula o retorno esperado pelo CAPM"""
     try:
@@ -421,7 +421,7 @@ async def calculate_capm(request: DCFRequest): # Use apenas o request se o symbo
         raise HTTPException(status_code=500, detail=f"Erro interno: {str(e)}")
     
 
-@app.post("/admin/update")
+@app.post("/api/admin/update")
 async def update_database(
     days_back: int = Query(7, description="Dias para atualizar"),
     db: Session = Depends(get_db)
@@ -439,7 +439,7 @@ async def update_database(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/admin/status")
+@app.get("/api/admin/status")
 async def database_status(db: Session = Depends(get_db)):
     """Retorna status do banco de dados"""
     try:
@@ -463,7 +463,7 @@ async def database_status(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@app.post("/admin/populate")
+@app.post("/api/admin/populate")
 async def populate_asset(symbol: str = None, months: int = 6, db: Session = Depends(get_db)):
     service = DatabasePopulator(db)
     
@@ -490,11 +490,8 @@ if STATIC_DIR.exists():
 else:
     print(f"[WARN] static não existe: {STATIC_DIR}")
 
-#app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-#app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(web_router)
-#app.include_router(web_router, prefix="/acoes")
 
 
 if __name__ == "__main__":

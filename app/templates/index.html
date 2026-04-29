@@ -138,7 +138,7 @@
         btn.disabled = true;
 
         try {
-            const response = await fetch('/acoes/dcf', {
+            const response = await fetch('/acoes/api/dcf', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 
