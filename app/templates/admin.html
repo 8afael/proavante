@@ -62,7 +62,7 @@
         btnText.innerHTML = `<svg class="animate-spin h-5 w-5 mr-3 border-t-2 border-white rounded-full" viewBox="0 0 24 24"></svg> Importando...`;
 
         try {
-            const response = await fetch(`/acoes/admin/populate?symbol=${symbol.toUpperCase()}&months=${months}`, {
+            const response = await fetch(`/acoes/api/admin/populate?symbol=${symbol.toUpperCase()}&months=${months}`, {
                 method: 'POST'
             });
             
