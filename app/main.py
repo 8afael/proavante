@@ -8,14 +8,6 @@ from fastapi.staticfiles import StaticFiles
 from app.web.router import router as web_router
 import asyncio
 import logging, json
-
-# Configurar logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-# Adicionar o diretório raiz ao path para importações
-sys.path.append(str(Path(__file__).parent.parent))
-
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -24,8 +16,6 @@ from sqlalchemy.exc import SQLAlchemyError
 import yfinance as yf
 import pandas as pd
 import numpy as np
-
-# Importações locais - ajuste os caminhos conforme sua estrutura
 from app.services.database import Base, get_db, SessionLocal, engine
 from app.models.stock_models import StockData, StockInfo, ValuationResult
 from app.schemas.stock_schemas import (
@@ -36,6 +26,14 @@ from app.schemas.stock_schemas import (
     StockInfoResponse
 )
 from app.services.valuation_engine import DCFCalculator, CAPMCalculator
+
+
+# Configurar logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# Adicionar o diretório raiz ao path para importações
+sys.path.append(str(Path(__file__).parent.parent))
 
 # Criar as tabelas no banco de dados
 def init_database():
@@ -217,9 +215,12 @@ class DatabasePopulator:
 
 # Criar aplicação FastAPI
 app = FastAPI(
-    title="Valuation Data API",
+    title="Ações API",
     description="API para dados financeiros e valuation de ações",
-    version="1.0.0"
+    root_path="/acoes",
+    version="1.0.0",
+    docs_url="/docs",          
+    openapi_url="/openapi.json"
 )
 
 
@@ -492,8 +493,8 @@ else:
 #app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 #app.mount("/static", StaticFiles(directory="static"), name="static")
-#app.include_router(web_router)
-app.include_router(web_router, prefix="/acoes")
+app.include_router(web_router)
+#app.include_router(web_router, prefix="/acoes")
 
 
 if __name__ == "__main__":
